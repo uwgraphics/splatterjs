@@ -6,6 +6,10 @@ This project is a JavaScript implementation of the Splatterplot interface descri
 
 The JavaScript implementation utilizes WebGL to bring Splatterplots to the web browser.  When deployed on a server, the interface allows for analysts to upload their data files, select the dimensions to display on the splatterplot, and plot the data.  The analyst then has the ability to pan and zoom around the data-space to find clusters and correlations between different data series.
 
+### Documentation
+
+The main `splatterplot.js` file is loosely documented with Markdown syntax.  Please use [docco](http://jashkenas.github.io/docco/) to generate a side-by-side of code with comments.  The following command works well: `docco -c docco-modified.css splatterplot.js`.
+
 ### Limitations
 
 Since SplatterJs depends on using WebGL, only browsers that support WebGL are supported (Chrome, Firefox, Opera).  As a rule of thumb, this does not include OS-bundled browsers, as they see WebGL as a security risk (bad WebGL code can hang a computer!).  
