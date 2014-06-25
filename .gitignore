@@ -4,6 +4,7 @@
 
 # project-specific files
 splatter-perf/
+*~
 
 # OS generated files #
 ######################
