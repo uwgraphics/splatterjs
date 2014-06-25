@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+	<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+    
+    <!-- boostrap -->
+    <link href="libs/bootstrap.min.css" rel="stylesheet" />
+    
+    <!-- style the file input button and adjust the Bootstrap progress bars (jQuery File Uploader) -->
+    <link rel="stylesheet" href="libs/jquery.fileupload.css">
+    
+    <!-- local stylesheet -->
+    <link rel="stylesheet" href="style.css" />
+    
+</head>
+<body>
+<div class="container">
+<!--<canvas id="glcanvas" width="640" height="640">
+    Your browser doesn't seem to support WebGL.
+</canvas>-->
+<!-- GL.create() will insert a canvas here -->
+<div id="splatters">
+
+</div>
+<br class="clearcanvas" style="clear: both;" />
+<form class="form-horizontal" role="form" id="controls">
+    
+    <div class="form-group slider-group">
+        <label for="bandwidth" class="col-sm-offset-1 col-sm-3 control-label">Bandwidth</label>
+        <div class="col-sm-7">
+            <div id="bandwidth"></div>
+        </div>    
+        <div id="disp-bandwidth" class="col-sm-1 slider-value">15</div>
+    </div>
+    
+    <div class="form-group slider-group">
+        <label for="threshold" class="col-sm-offset-1 col-sm-3 control-label">Threshold</label>
+        <div class="col-sm-7">
+            <div id="threshold"></div>
+        </div>
+        <div id="disp-threshold" class="col-sm-1 slider-value">0.5</div>
+    </div>
+        
+    <div class="form-group slider-group">
+        <label for="clutter" class="col-sm-offset-1 col-sm-3 control-label">Clutter Radius</label>
+        <div class="col-sm-7">
+            <div id="clutter"></div>
+        </div>
+        <div id="disp-clutter" class="col-sm-1 slider-value">25</div>
+    </div>
+    
+    <div class="form-group slider-group">
+        <label for="outlierSize" class="col-sm-offset-1 col-sm-3 control-label">Outlier Point Size</label>
+        <div class="col-sm-7">
+            <div id="outlierSize"></div>
+        </div>
+        <div id="disp-outlierSize" class="col-sm-1 slider-value">2</div>
+    </div>
+    
+    <!-- spacer between -->
+ 
+    
+    <!-- spacer between sliders and buttons -->
+    <div class="form-group">&nbsp;</div>
+    
+    <div class="form-group">
+        <div class="col-sm-6 col-sm-offset-1">
+            <button class="btn btn-default" id="splatter">Splatterplot</button>
+            <button class="btn btn-default" id="kde">KDE</button>
+            <button class="btn btn-default" id="scatter">Scatter</button>
+        </div>
+        <div class="col-sm-3">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" id="hideoutliers" /> Hide Outliers?          
+                </label>
+            </div>
+        </div>
+        <div class="col-sm-2">
+            <button class="btn btn-default" id="resetview">Reset View</button>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-2 col-sm-offset-1">
+            <button class="btn btn-warning" data-toggle="collapse" data-target="#debug">
+                Show Debug
+            </button>
+        </div>
+        <div class="col-sm-3 col-sm-offset-4">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" id="dotiming" /> <abbr title="see console for info">Do timing?</abbr>          
+                </label>
+            </div>
+        </div>
+        <div class="col-sm-2">
+            <button class="btn btn-primary" data-toggle="modal" data-target="#fileloader">Load File</button>
+        </div>
+    </div>
+    <div id="debug" class="collapse panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">Debugging &amp; performance options</h3>
+        </div> 
+        <div class="panel-body">
+            <form class="form-horizontal" role="form" id="debug-form">
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" for="canvassize">Canvas size</label>
+                    <div class="col-sm-3">
+                        <select class="form-control" id="canvassize" disabled>
+                            <option>800x600</option>
+                            <option>800x800</option>
+                            <option>400x300</option>
+                            <option>200x150</option>
+                        </select>
+                    </div>
+                    <label class="col-sm-2 col-sm-offset-1 control-label" for="numgrps">Max number of grps</label>
+                    <div class="col-sm-3">
+                        <select class="form-control" id="numgrps">
+                            <option>1</option>
+                            <option>2</option>
+                            <option>3</option>
+                            <option>4</option>
+                            <option>5</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">&nbsp;</div>
+    
+                <div class="form-group slider-group">
+                    <div class="col-sm-offset-1 col-sm-3 control-label">
+                        <label for="subsetpercent">% points to render</label><br />
+                        <span id="ptsDrawn">pts</span>
+                    </div>
+                    <div class="col-sm-7">
+                        <div id="subsetpercent"></div>
+                    </div>
+                    <div id="disp-subsetpercent" class="col-sm-1 slider-value">100%</div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+</form>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Example Datasets</h3>
+    </div>
+    <div class="panel-body">
+        <dl class="dl-horizontal">
+            <dt><a href="#venn2.txt/2/0/1/2">venn2.txt</a></dt>
+            <dd>The default showing two gaussian data series.</dd>
+            <dt><a href="#venn4.txt/2/0/1/2">venn4.txt</a></dt>
+            <dd>Slightly skewed distributions of four data series.</dd>
+            <dt><a href="#venn5-25k.txt/2/0/1/2">venn5-25k.txt</a></dt>
+            <dd>Five data series (5k points each) with similar but offset centers as <code>venn2.txt</code>.</dd>
+            <dt><a href="#venn5-250k.txt/2/0/1/2">venn5-250k.txt</a></dt>
+            <dd>Similar to <code>venn5-25k.txt</code> except with 50k points per series to total 250k points total.</dd>
+        </dl>
+        <hr />
+        <p>Some datasets for those computers who lack GPU (only 500 pts total):</p>
+        <dl class="dl-horizontal">
+            <dt><a href="#venn1-500.txt/2/0/1/2">venn1-500.txt</a></dt>
+            <dd>A single gaussian data series.</dd>
+            <dt><a href="#venn2-500.txt/2/0/1/2">venn2-500.txt</a></dt>
+            <dd>Two gaussian data series.</dd>
+            <dt><a href="#venn3-500.txt/2/0/1/2">venn3-500.txt</a></dt>
+            <dd>Three gaussian data series; the data gets a little more sparse.  Changing bandwidth or zooming out still shows structure.</dd>
+            <dt><a href="#venn4-500.txt/2/0/1/2">venn4-500.txt</a></dt>
+            <dd>Similar to <code>venn3-500.txt</code> except 125 points per group, meaning structure is even harder to see, but is still recoverable using the above tips.</dd>
+        </dl>
+        
+    </div>
+</div>
+
+<div id="fileloader" class="modal fade" tabIndex="-1" role="dialog" aria-labelledby="fileloaderLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="fileloaderLabel">Load file to the Splatterplot</h4>
+            </div>
+            <div class="modal-body">
+                <p>Choose a file to upload below.  Currently, the tool only supports comma-separated values with the file extensions of .csv, .txt, or .dat.  The name of the file you upload cannot have spaces, or the file will fail to load.</p>
+                <!-- The fileinput-button span is used to style the file input field as button -->
+                <span class="btn btn-success fileinput-button">
+                    <i class="glyphicon glyphicon-plus"></i>
+                    <span>Select files...</span>
+                    <!-- The file input field used as target for the file upload widget -->
+                    <input id="fileupload" type="file" name="files[]" multiple>
+                </span>
+                <br>
+                <br>
+                <!-- The global progress bar -->
+                <div id="progress" class="progress hidden">
+                    <div class="progress-bar progress-bar-success"></div>
+                </div>
+                <!-- The container for the uploaded files -->
+                <div id="files" class="files">
+                    <div id="uploadError" class="hidden">
+                        <p class="bg-danger lg-msg">
+                            Error uploading file:  
+                            <span id="uploadErrorDetail"></span>.
+                        </p>
+                    </div>
+                    <div id="uploadSuccess" class="hidden">
+                        <p class="bg-success lg-msg">
+                            File <strong></strong> uploaded.
+                        </p>
+                    </div>
+                </div>
+                <div id="filefeedback" class="hidden">
+                    <hr />
+                    <p>Here is a sample of the beginning of the file you just uploaded.  Please select the appropriate options below to view the dataset in the Splatterplot.</p>
+                    <p>You can return to this dialog to change options later.</p>
+                    <pre></pre>
+                    <form class="form-horizontal" role="form">
+                        <div class="form-group">
+                            <div class="col-sm-offset-1 col-sm-4">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" id="uploadHasHeader" checked /> File has header
+                                    </label>
+                                </div>
+                            </div>
+                            <label for="uploadHeaderRow" class="col-sm-3 control-label">Header Row</label>
+                            <div class="col-sm-4">
+                                <select id="uploadHeaderRow" class="form-control">
+                                    <option>1</option>
+                                    <option>2</option>
+                                    <option>3</option>
+                                    <option>4</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="uploadDataStartLine" class="col-sm-offset-4 col-sm-4 control-label">Data starts on...</label>
+                            <div class="col-sm-4">
+                                <input class="form-control" id="uploadDataStartLine" placeholder="line number" required />
+                            </div>
+                            <p id="uploadDataStartLineFeedback" class="col-sm-offset-6 col-sm-6 help-block text-right hidden"></p>
+                        </div>
+                        <div class="form-group">
+                            <label for="uploadXColumn" class="col-sm-offset-4 col-sm-4 control-label">X-axis column</label>
+                            <div class="col-sm-4">
+                                <select id="uploadXColumn" class="form-control">
+                                    <option>1</option>
+                                    <option>2</option>
+                                    <option>3</option>
+                                    <option>4</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="uploadYColumn" class="col-sm-offset-4 col-sm-4 control-label">Y-axis column</label>
+                            <div class="col-sm-4">
+                                <select id="uploadYColumn" class="form-control">
+                                    <option>1</option>
+                                    <option>2</option>
+                                    <option>3</option>
+                                    <option>4</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="uploadGroupColumn" class="col-sm-offset-4 col-sm-4 control-label">Group By column</label>
+                            <div class="col-sm-4">
+                                <select id="uploadGroupColumn" class="form-control">
+                                    <option>None</option>
+                                </select>
+                            </div>
+                            <p class="col-sm-offset-4 col-sm-8 help-block text-right">If anything other than <strong>None</strong> is selected, that column will be used to slice the given data into different data series.</p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal">Cancel and Close</button>
+                <button id="uploadSubmit" class="btn btn-primary">Save Options and Load Dataset</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- load scripts down here -->
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    
+    <!-- jQueryUI necessary for sliders -->
+    <script type="text/javascript" src="libs/jquery-ui-1.10.4.custom.min.js"></script>
+    
+    <!-- helps with parsing mousewheel events -->
+    <script type="text/javascript" src="libs/jquery.mousewheel.js"></script>
+    
+    <!-- boostrap -->
+    <script type="text/javascript" src="libs/bootstrap.min.js"></script>
+    
+    <!-- libraries for jQuery File Upload -->
+    <!-- The Iframe Transport is required for browsers without support for XHR file uploads -->
+    <script src="libs/jquery.iframe-transport.js"></script>
+    <!-- The basic File Upload plugin -->
+    <script src="libs/jquery.fileupload.js"></script>
+    
+    <!-- library for storing state in the URL hash -->
+    <script src="libs/hashable.js"></script>
+    
+    <!-- adds ability to push/pop matrices, and adds matrix classes/functions -->
+    <!-- https://github.com/evanw/lightgl.js/ -->
+    <script type="text/javascript" src="libs/lightgl.js"></script>
+    
+    <!-- the actual javascript -->
+    <script type="text/javascript" src="debug.js"></script>
+    <script type="text/javascript" src="fileops.js"></script>
+    <script type="text/javascript" src="color.js"></script>
+    <script type="text/javascript" src="splatterplot.js"></script>
+    <script>
+    
+    // make the hash object accessible anywhere (global scope)
+    var hash;
+    
+    <!-- on-demand javascript to handle file uploads -->
+    $(function () {
+    
+        // save the current-uploaded file and the upload dir
+        var currentFile = {};
+        var uploadFileDir = "libs/jq-fileupload-include/files/";
+        
+        // handle setting up the hash object for saving state in URL
+        hash = hashable.hash()
+            .format("{path}/{dataRow}/{x}/{y}/{grp}")
+            .change(function(e) {
+                var data = e.data;
+                
+                // get the data and load it into the splatterplot
+                $.get(uploadFileDir + data.path, parseDataToSplatterplot(hash));
+                
+                console.log("changed state: ", data);
+            })
+            // default parameters for the URL hash; load the venn2.txt dataset if no 
+            // URL has present
+            .default(function() {
+                return {
+                    path: "venn2.txt",
+                    dataRow: 2,
+                    x: 0,
+                    y: 1,
+                    grp: 2
+                }
+            })
+            .enable()
+            .check();
+    
+        // given a file, try to figure out how many columns are in the file 
+        // and what the column names are
+        function populateUploadOptions() {
+            $("#filefeedback pre").html(currentFile.preview);
+
+            var lines = currentFile.preview.split("\n");
+            
+            if ($("#uploadHasHeader").prop('checked')) {
+                var header = lines[$("#uploadHeaderRow").val() - 1];
+                currentFile.columnNames = header.split(",");
+                currentFile.numColumns = currentFile.columnNames.length;
+            } else {
+                // guess at how many columns there are based on the first row
+                currentFile.numColumns = lines[0].split(",").length;
+                currentFile.columnNames = [];
+                for (var i = 1; i <= currentFile.numColumns; i++) {
+                    currentFile.columnNames.push("Column " + i);
+                }
+            }
+            
+            // populate the dropdown (deleting whatever was there before)
+            var dropdownsToPopulate = [
+                document.getElementById("uploadXColumn"), 
+                document.getElementById("uploadYColumn"),
+                document.getElementById("uploadGroupColumn")
+            ];
+            
+            for (var i = 0; i < dropdownsToPopulate.length; i++) {
+                var curDropdown = dropdownsToPopulate[i];
+                
+                // delete existing options
+                while (curDropdown.hasChildNodes()) {
+                    curDropdown.removeChild(curDropdown.lastChild);
+                }
+            
+                // add new options
+                for (var j = 0; j < currentFile.numColumns; j++) {
+                    var el = document.createElement("option");
+                    el.textContent = currentFile.columnNames[j];
+                    el.value = j;
+                    curDropdown.appendChild(el);
+                }
+                
+                // select the n-th column
+                if (curDropdown.children.length > i) {
+                    curDropdown.children[i].selected = true;
+                }
+            }
+            
+            // shove 'None' as the first option for `Group By column`
+            var grpChoice = document.getElementById("uploadGroupColumn")
+            var noneEl = document.createElement("option");
+            noneEl.textContent = "None"; noneEl.value = -1;
+            grpChoice.insertBefore(noneEl, grpChoice.firstChild);
+            
+            // only select a column if there are enough disjoint options
+            if (currentFile.numColumns >= 3)
+                grpChoice.children[3].selected = true;
+            else 
+                grpChoice.firstChild.selected = true;
+        }
+        
+        $("#uploadHeaderRow").change(populateUploadOptions);
+        $("#uploadHasHeader").change(function() {
+            if ($(this).prop('checked')) {
+                $("#uploadHeaderRow").prop('disabled', false);
+            } else {
+                $("#uploadHeaderRow").prop('disabled', true);
+            }
+            populateUploadOptions();
+        });
+        
+        // verify that all options are okay before proceding
+        function verifyOptions() {
+            var dataStart = $("#uploadDataStartLine").val();
+            
+            // check if positive integer
+            if (dataStart === "" || +dataStart != dataStart || dataStart % 1 || dataStart < 0) {
+                $("#uploadDataStartLineFeedback").removeClass("hidden").focus();
+                $("#uploadDataStartLineFeedback").text("Please enter a positive integer.");
+                $("#uploadDataStartLineFeedback").parent().addClass("has-error has-feedback");
+                return false;
+            } else {
+                $("#uploadDataStartLineFeedback").addClass("hidden");
+                $("#uploadDataStartLineFeedback").parent().removeClass("has-error has-feedback");
+            }
+            
+            return true;
+        }
+        
+        // callback call for a $.get() request for the data;
+        // should be called by hashable.hash().change().
+        // also pass in the hash object so we keep our format string intact.        
+        function parseDataToSplatterplot(thishash) {
+            return function(data, textStatus) {
+                // if `thishash` is undefined, no op
+                if (thishash === undefined) return;
+            
+                // get the newly-set parameters out of the URL hash
+                var params = thishash.read().data();
+                loadFile(
+                    data, 
+                    +params.dataRow - 1, // convert 1-index to 0-index
+                    +params.x,
+                    +params.y,
+                    +params.grp
+                );
+                
+                resetUIForNewData();
+                gl.ondraw();
+            };
+        };
+        
+        $("#uploadSubmit").click(function() {
+            if (verifyOptions()) {
+                
+                // update the URL string, which will call the change() method 
+                // that prompts a splatterplot dataset update
+               hash.set({
+                    path: currentFile.url.split(uploadFileDir)[1], // get only the filename
+                    dataRow: +$("#uploadDataStartLine").val(),
+                    x: +$("#uploadXColumn").val(),
+                    y: +$("#uploadYColumn").val(),
+                    grp: +$("#uploadGroupColumn").val()
+                }).check();
+                
+                $("#fileloader").modal('hide');
+            }
+        });
+    
+        // provided code to handle file uploads
+        'use strict';
+        $('#fileupload').fileupload({
+            url: 'libs/jq-fileupload-include/',
+            dataType: 'json',
+            done: function (e, data) {
+                
+                $.each(data.result.files, function (index, file) {
+                    if (file.hasOwnProperty("error")) {
+                        $("#uploadError").removeClass("hidden");
+                        $("#uploadErrorDetail").html(file.error);
+                        $("#progress").addClass("hidden");
+                    } else {
+                        $("#uploadSuccess").removeClass("hidden");
+                        $("#uploadSuccess strong").html(file.name);
+                        
+                        // deal with populating the filefeedback div
+                        $("#filefeedback").removeClass("hidden");
+                        
+                        // set the current file, and prime the user form for the uploaded file
+                        currentFile = file;
+                        populateUploadOptions();
+                    }
+                });
+            },
+            progressall: function (e, data) {
+                $("#uploadError").addClass("hidden");
+                $("#uploadSuccess").addClass("hidden");
+                $("#filefeedback").addClass("hidden");
+                $('#progress').removeClass('hidden');
+                
+                var progress = parseInt(data.loaded / data.total * 100, 10);
+                $('#progress .progress-bar').css(
+                    'width',
+                    progress + '%'
+                );
+            }
+        }).prop('disabled', !$.support.fileInput)
+            .parent().addClass($.support.fileInput ? undefined : 'disabled');
+            
+        // finally, load given path into the splatterplot when the page finishes loading
+        $.get(uploadFileDir + hash.data().path, parseDataToSplatterplot(hash));
+    });
+    </script>
+</div> <!-- close container -->
+</body>
+</html>

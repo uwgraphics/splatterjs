@@ -1,0 +1,7 @@
+ForceType application/octet-stream
+Header set Content-Disposition attachment
+<FilesMatch "(?i)\.(txt|csv|dat)$">
+    ForceType none
+    Header unset Content-Disposition
+</FilesMatch>
+Header set X-Content-Type-Options nosniff

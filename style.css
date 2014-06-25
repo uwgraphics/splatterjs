@@ -1,0 +1,86 @@
+html, body {
+	background-color: #aaa; 
+	font-family: sans-serif;
+}
+
+#splatters {
+	height: 607px;
+}
+
+/* dunno why #2dcanvas doesn't work */
+canvas:nth-child(2) {
+	position: relative;
+	top: -607px;
+	z-index: 10;
+}
+
+canvas { 
+	border: 1px solid black;
+}
+
+section { 
+	width: 150px; 
+	height: auto; 
+	margin: 100px auto 0; 
+	position: relative; 
+}
+
+.clearcanvas {
+	position: absolute; top: 610px; left: 6px; clear: both;
+}
+
+#controls { 
+	width: 800px;
+}
+
+.ui-slider {
+	margin-top: 13px;
+	width: 330px;
+	float: left;
+}
+
+.slider-value {
+	margin-top: 6px;
+}
+
+.ui-slider-horizontal {
+	background: #555 !important;
+	border: 1px solid #000 !important;
+	height: 8px !important;
+}
+
+.ui-slider-handle {
+	background: url("img/handle.png") !important;
+	border: none !important;
+	width: 25px !important;
+	height: 25px !important;
+	outline: none;
+	top: -9px !important;
+}
+
+/* uses colorbrewer2.org's 5-class Pastel2 */
+#bandwidth > .ui-widget-header {
+	background: #b3e2cd;
+}
+
+#threshold > .ui-widget-header {
+	background: #fdcdac;
+}
+
+#clutter > .ui-widget-header {
+	background: #cbd5e8;
+}
+
+#outlierSize > .ui-widget-header {
+	background: #f4cae4;
+}
+
+#subsetpercent > .ui-widget-header {
+	background: #e6f5c9;
+}
+
+/* FILE UPLOADING STYLES */
+
+.lg-msg {
+	padding: 15px;
+}
