@@ -2,7 +2,7 @@
 
 This project is a JavaScript implementation of the Splatterplot interface described by [Adrian Mayorga](http://cs.wisc.edu/~adrm) and [Michael Gleicher](http://cs.wisc.edu/~gleicher) in their TVCG submission entitled [**Splatterplots: Overcoming Overdraw in Scatter Plots**](http://graphics.cs.wisc.edu/Papers/2013/MG13/).  The work was also presented at IEEE VIS in the invited TVCG InfoVis session in 2013.  
 
-![SplatterJs rendering a 5-set gaussian dataset](//github.com/uwgraphics/splatterjs/img/splatter-teaser.png)
+![SplatterJs rendering a 5-set gaussian dataset](https://raw.githubusercontent.com/uwgraphics/splatterjs/master/img/splatter-teaser.png)
 
 The JavaScript implementation utilizes WebGL to bring Splatterplots to the web browser.  When deployed on a server, the interface allows for analysts to upload their data files, select the dimensions to display on the splatterplot, and plot the data.  The analyst then has the ability to pan and zoom around the data-space to find clusters and correlations between different data series.
 
