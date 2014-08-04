@@ -1,7 +1,7 @@
 window.onload = main;
 
 // create the gl context using lightgl.js
-var gl = GL.create();
+var gl = GL.create({width: 800, height: 600});
 
 // hold compiled shaders
 var shaders = [];
@@ -37,6 +37,15 @@ var ds = {
 
 // holds a full quad (e.g. -1,-1 to 1,1) for texture writing
 var plane; 
+
+// holds the 'max' texture name that has the maximum value in its (0,0) coordinate
+// (can change based on the size of the canvas when ping-ponging)
+var maxTexName = 'max1';
+var maxComputed = false;
+
+// `maxTexture` and `maxTexture2` holds the global maximum texture
+var maxTexture = [];
+var maxTextureNum = -1;
 
 // rendering variables (should be user-controlled eventually)
 var sigma = 15.0;
@@ -109,6 +118,10 @@ var initTextures = function() {
     grp.textures['outlierpts'] = new GL.Texture(gl.canvas.width, gl.canvas.height, floatOpts);
   });
   
+  // Initialize the global maximum textures
+  maxTexture[0] = new GL.Texture(gl.canvas.width, gl.canvas.height, floatOpts);
+  maxTexture[1] = new GL.Texture(gl.canvas.width, gl.canvas.height, floatOpts);
+  
   // Initialize a utility framebuffer
   ds.fbo = gl.createFramebuffer();
   
@@ -131,9 +144,20 @@ var clearTextures = function(grp) {
   gl.bindFramebuffer(gl.FRAMEBUFFER, ds.fbo);
   gl.clearColor(0.0, 0.0, 0.0, 0.0);
   
-  for (var texture in grp.textures) {  
+  for (var texture in grp.textures) {
+    // Skip processing max textures so that they always contain the maximum blurred value of each dataset.
+    // Set `maxComputed` to false to force rebuilding the texture.
+    if (maxComputed && texture.indexOf("max") != -1) continue;
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, grp.textures[texture].id, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  }
+  
+  // clear the max texture if the max has not been computed
+  if (!maxComputed) {
+    for (var i = 0; i < 2; i++) {
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, maxTexture[i].id, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    }
   }
   
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -321,23 +345,55 @@ var findMax = function() {
     timeStop("\tfinding max for group " + i);
   });
   
+  console.log("maxValue is in the max" + (numSteps % 2) + " texture, in the first " + pixAtEnd + " pixels");
+  maxTexName = "max" + ((numSteps) % 2);
+  maxComputed = true;
 };
 
-var debugMax = function() {
-  if (!shaders['maxdebug']) {
+// ### getGlobalMax();
+//
+// Uses a shader to pick out the maximum value stored in all groups' textures.  
+// Activated on request from the UI.
+var getGlobalMax = function() {
+  var shader = shaders['maxtexture'];
+  if (!shader) {
     if (!timer)
       timer = setTimeout("gl.ondraw()", 300);
     return;
   }
   
-  var grp = ds.groups[0];
-  grp.textures['max1'].bind(0);
-  shaders['maxdebug'].uniforms({
-    maxTex: 0,
-    delta: [1.0 / gl.canvas.width, 1.0 / gl.canvas.height],
-    maxVal: 5
-  }).draw(plane);
-  grp.textures['max1'].unbind(0);
+  gl.disable(gl.DEPTH_TEST);
+  
+  var lastGrp = 0;
+  ds.groups.forEach(function(grp, g) {
+    maxTexture[(g + 1) % 2].drawTo(function() {
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        
+      maxTexture[g % 2].bind(0);
+      grp.textures[maxTexName].bind(1);
+      shader.uniforms({
+        max1: 0,
+        max2: 1
+      }).draw(plane);
+      grp.textures[maxTexName].unbind(1);
+      maxTexture[g % 2].unbind(0);
+    });
+    
+    lastGrp = (g + 1) % 2;
+  });
+  
+  maxTextureNum = lastGrp;
+};
+
+// ### getMaxTexture();
+//
+// Contains logic to select the appropriate texture that holds the maximum value
+// with which to determine the thresholded region for the particular group.
+var getMaxTexture = function(grp) {
+  if (maxTextureNum == -1) 
+    return grp.textures[maxTexName];
+  else 
+    return maxTexture[maxTextureNum];
 };
 
 // ### getJfa();
@@ -359,14 +415,14 @@ var getJfa = function() {
     timeStart("\tInitializing JFA for group " + g);
     grp.textures['dist0'].drawTo(function() {
       grp.textures['freq0'].bind(0); // Texture that contains the blurred density data.
-      grp.textures['max1'].bind(1); // Texture that contains the max density at (0,0)
+      getMaxTexture(grp).bind(1); // Texture that contains the max density at (0,0)
       shaders['jfainit'].uniforms({
         texture: 0,
         maxTex: 1,
         upperLimit: threshold
       }).draw(plane);
       grp.textures['freq0'].unbind(0);
-      grp.textures['max1'].unbind(1);
+      getMaxTexture(grp).unbind(1);
     });
     timeStop("\tInitializing JFA for group " + g);
     
@@ -414,7 +470,7 @@ var shade = function() {
     // Use the max0 texture (raw density function) and the distance texture (jfa)
     grp.textures['rgb'].drawTo(function() {
       grp.textures['outlierpts'].bind(3);
-      grp.textures['max1'].bind(2);
+      getMaxTexture(grp).bind(2);
       grp.textures['dist0'].bind(1);
       grp.textures['freq0'].bind(0);
       shaders['shade'].uniforms({
@@ -432,7 +488,7 @@ var shade = function() {
     // Clean up state.
     grp.textures['freq0'].unbind(0);
     grp.textures['dist0'].unbind(1);
-    grp.textures['max1'].unbind(2);
+    getMaxTexture(grp).unbind(2);
     grp.textures['outlierpts'].bind(3);
   });
 };
@@ -589,17 +645,9 @@ var setInitBounds = function() {
   scale = gl.canvas.height / scale;
   
   screenOffset = [gl.canvas.width / 2.0, gl.canvas.height / 2.0];
+  
+  maxComputed = false;
 };
-
-// ### resetUIForNewData();
-//
-// This function is meant to be called after the context has been set up, but a different
-// dataset is being loaded to the splatterplot.  The viewport needs to be configured to the
-// new bounds of the data, and the textures need to be re-created.
-var resetUIForNewData = function() {
-  setInitBounds();
-  textureExists = false;
-}
 
 // ### gl.ondraw();
 //
@@ -624,8 +672,15 @@ gl.ondraw = function() {
   if (timings) {
     console.log("START TIMING RUN");
     console.log("=====================================");
-    timeStart("== total time elapsed");
+    //timeStart("== total time elapsed");
   }
+  
+  // Tell the drawing operations that the maximum textures are unavilable 
+  // if the 'use global maximum' checkbox is unchecked.
+  if (!$("#globalmax").prop('checked'))
+    maxTextureNum = -1;
+  
+  console.time("== total time elapsed");
   
   // On the first run, set up required parameters.
   if (!setup)
@@ -640,7 +695,10 @@ gl.ondraw = function() {
     debugJfa();
   } else if ($("#hideoutliers").prop('checked')) {
     drawBlur();
-    findMax();
+    if (!maxComputed) 
+      findMax();
+    if ($("#globalmax").prop('checked'))
+      getGlobalMax();
     getJfa();
     shade();
     blend();
@@ -652,7 +710,10 @@ gl.ondraw = function() {
     if (timings) { console.time("draw blur"); }
     drawBlur();
     if (timings) { console.timeEnd("draw blur"); console.time("find max"); }
-    findMax();
+    if (!maxComputed) 
+      findMax();
+    if ($("#globalmax").prop('checked'))
+      getGlobalMax();
     if (timings) { console.timeEnd("find max"); console.time("propagate JFA"); }
     getJfa();
     if (timings) { console.timeEnd("propagate JFA"); console.time("draw outliers"); }
@@ -668,7 +729,9 @@ gl.ondraw = function() {
   timeStart("draw 2D grid");
   draw2d();
   timeStop("draw 2D grid");
-  timeStop("== total time elapsed");
+  
+  console.timeEnd("== total time elapsed");
+  //timeStop("== total time elapsed");
 };
 
 // ## Handlers for mouse-interaction
@@ -694,6 +757,9 @@ gl.onmousemove = function(e) {
 
 gl.onmouseup = function(e) {
   buttons[e.which] = false;
+  
+  maxComputed = false;
+  gl.ondraw();
 };
 
 var drags = function(e) {
@@ -716,6 +782,9 @@ var mwheel = function(e, delta, deltaX, deltaY) {
   
   screenOffset[0] = x;
   screenOffset[1] = y;
+  
+  // Force recomputation of the maximum value textures when zooming to preserve some sort of thresholded region.
+  maxComputed = false;
   
   gl.ondraw();
 };
@@ -769,7 +838,8 @@ var draw2d = function() {
   var exp = Math.floor(Math.log(max - min) / Math.log(10));
   var d = Math.pow(10, exp) * 0.1;
   
-  var alpha = (1 - (150 - d * scale) / 150) / 2;
+  var alpha = (1 - (150 - d * scale) / 150) 
+  alpha = Math.max(0.0, Math.min(1.0, alpha)) / 2;
   context2d.globalAlpha = alpha;
   
   var graphMin = Math.floor(min / d) * d;
@@ -788,7 +858,8 @@ var draw2d = function() {
   
   // major lines
   d *= 10;
-  alpha = (1 - (150 - d * scale) / 150) / 2;
+  alpha = (1 - (150 - d * scale) / 150);
+  alpha = Math.max(0.0, Math.min(1.0, alpha)) / 2;
   context2d.globalAlpha = alpha;
   graphMin = Math.floor(min / d) * d;
   graphMax = Math.ceil(max / d) * d;
@@ -805,7 +876,8 @@ var draw2d = function() {
   }
   
   // now do x
-  alpha = (1 - (150 - d * scale) / 150) / 2;
+  alpha = (1 - (150 - d * scale) / 150);
+  alpha = Math.max(0.0, Math.min(1.0, alpha)) / 2;
   context2d.globalAlpha = alpha;
   min = untransformX(0), max = untransformX(gl.canvas.width);
   exp = Math.floor(Math.log(max - min) / Math.log(10));
@@ -827,7 +899,8 @@ var draw2d = function() {
   
   // major lines
   d *= 10;
-  alpha = (1 - (150 - d * scale) / 150) / 2;
+  alpha = (1 - (150 - d * scale) / 150);
+  alpha = Math.max(0.0, Math.min(1.0, alpha)) / 2;
   context2d.globalAlpha = alpha;
   graphMin = Math.floor(min / d) * d;
   graphMax = Math.ceil(max / d) * d;
@@ -871,6 +944,17 @@ var takeSubset = function(percent) {
   return totalPointsDrawn;
 };
 
+// ### resetUIForNewData();
+//
+// This function is meant to be called after the context has been set up, but a different
+// dataset is being loaded to the splatterplot.  The viewport needs to be configured to the
+// new bounds of the data, and the textures need to be re-created.
+var resetUIForNewData = function() {
+  setInitBounds();
+  textureExists = false;
+  maxComputed = false;
+}
+
 var resizeCanvas = function(width, height) {
   // only change if width or height are different
   if (gl.canvas.width != width || gl.canvas.height != height) {
@@ -891,9 +975,9 @@ var resizeCanvas = function(width, height) {
   
   // Set up WebGL environment.
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  gl.matrixMode(gl.PROJECTION);
-  gl.ortho(0, gl.canvas.width, 0, gl.canvas.height, -100, 100);
-  gl.matrixMode(gl.MODELVIEW);
+  //gl.matrixMode(gl.PROJECTION);
+  //gl.ortho(0, gl.canvas.width, 0, gl.canvas.height, -100, 100);
+  //gl.matrixMode(gl.MODELVIEW);
   
   return width * height;
 };
@@ -971,6 +1055,7 @@ function main() {
   $("#hideoutliers").change(gl.ondraw);
   $("#showmax").change(gl.ondraw);
   $("#dotiming").change(gl.ondraw);
+  $("#globalmax").change(gl.ondraw);
   
   // Load the required shader files.
   loadShaderFromFiles('testlgl');
@@ -985,6 +1070,8 @@ function main() {
   loadShaderFromFiles('testblur256', 'testblur.vs', 'testblur256.fs');
   
   loadShaderFromFiles('testmax', 'testblur.vs', 'testmax.fs');
+  loadShaderFromFiles('maxtexture', 'testblur.vs', 'maxtexture.fs');
+  
   loadShaderFromFiles('jfainit', 'testblur.vs', 'jfainit.fs');
   loadShaderFromFiles('jfa', 'testblur.vs', 'jfa.fs');
   loadShaderFromFiles('shade', 'testblur.vs', 'shade.fs');

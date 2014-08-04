@@ -3,6 +3,10 @@ html, body {
 	font-family: sans-serif;
 }
 
+.navbar-brand img {
+	margin: -12px 7px 0 0;
+}
+
 #splatters {
 	height: 607px;
 }
@@ -10,12 +14,14 @@ html, body {
 /* dunno why #2dcanvas doesn't work */
 canvas:nth-child(2) {
 	position: relative;
-	top: -607px;
+	top: -602px;
 	z-index: 10;
 }
 
 canvas { 
+	margin: 0 auto;
 	border: 1px solid black;
+	display: block
 }
 
 section { 
@@ -40,7 +46,7 @@ section {
 }
 
 .slider-value {
-	margin-top: 6px;
+	margin: 6px 0 0 20px;
 }
 
 .ui-slider-horizontal {

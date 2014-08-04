@@ -18,19 +18,54 @@
 </head>
 <body>
 <div class="container">
-<!--<canvas id="glcanvas" width="640" height="640">
-    Your browser doesn't seem to support WebGL.
-</canvas>-->
-<!-- GL.create() will insert a canvas here -->
-<div id="splatters">
 
+<!-- navbar -->
+<nav class="navbar navbar-default" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">
+                <img src="img/logo.png" class="img-responsive pull-left"> 
+                Splatterplots JS 
+            </a>
+        </div>
+        
+        <div class="collapse navbar-collapse" id="navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li><a href="#" data-toggle="modal" data-target="#faq">How to use</a>
+                <li><a href="https://github.com/uwgraphics/splatterjs" target="_blank">View on GitHub</a></li>
+            </ul>
+            
+            <p class="navbar-text navbar-right"><small>
+                <span class="text-danger">
+                    Only works in non-mobile Google Chrome;
+                </span>
+                currently viewing file <a href="#" class="navbar-link" id="filename-label">venn2.txt</a>.
+            </small></p>
+        </div>
+    </div>
+</nav>
+
+<!-- GL.create() will insert a canvas here -->
+<div class="row">
+    <div class="col-sm-12">
+        <div id="splatters">
+
+        </div>
+    </div>
 </div>
+
 <br class="clearcanvas" style="clear: both;" />
-<form class="form-horizontal" role="form" id="controls">
+<form class="form-horizontal" role="form">
     
     <div class="form-group slider-group">
         <label for="bandwidth" class="col-sm-offset-1 col-sm-3 control-label">Bandwidth</label>
-        <div class="col-sm-7">
+        <div class="col-sm-4">
             <div id="bandwidth"></div>
         </div>    
         <div id="disp-bandwidth" class="col-sm-1 slider-value">15</div>
@@ -38,7 +73,7 @@
     
     <div class="form-group slider-group">
         <label for="threshold" class="col-sm-offset-1 col-sm-3 control-label">Threshold</label>
-        <div class="col-sm-7">
+        <div class="col-sm-4">
             <div id="threshold"></div>
         </div>
         <div id="disp-threshold" class="col-sm-1 slider-value">0.5</div>
@@ -46,7 +81,7 @@
         
     <div class="form-group slider-group">
         <label for="clutter" class="col-sm-offset-1 col-sm-3 control-label">Clutter Radius</label>
-        <div class="col-sm-7">
+        <div class="col-sm-4">
             <div id="clutter"></div>
         </div>
         <div id="disp-clutter" class="col-sm-1 slider-value">25</div>
@@ -54,25 +89,29 @@
     
     <div class="form-group slider-group">
         <label for="outlierSize" class="col-sm-offset-1 col-sm-3 control-label">Outlier Point Size</label>
-        <div class="col-sm-7">
+        <div class="col-sm-4">
             <div id="outlierSize"></div>
         </div>
         <div id="disp-outlierSize" class="col-sm-1 slider-value">2</div>
-    </div>
-    
-    <!-- spacer between -->
- 
+    </div> 
     
     <!-- spacer between sliders and buttons -->
     <div class="form-group">&nbsp;</div>
     
     <div class="form-group">
-        <div class="col-sm-6 col-sm-offset-1">
+        <div class="col-sm-4 col-sm-offset-1">
             <button class="btn btn-default" id="splatter">Splatterplot</button>
             <button class="btn btn-default" id="kde">KDE</button>
             <button class="btn btn-default" id="scatter">Scatter</button>
         </div>
         <div class="col-sm-3">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" id="globalmax" /> <abbr title="Use the maximum value from all datasets when determining thresholded region; otherwise, use per-group max.">Use global maximum?</abbr>
+                </label>
+            </div>
+        </div>
+        <div class="col-sm-2">
             <div class="checkbox">
                 <label>
                     <input type="checkbox" id="hideoutliers" /> Hide Outliers?          
@@ -89,10 +128,10 @@
                 Show Debug
             </button>
         </div>
-        <div class="col-sm-3 col-sm-offset-4">
+        <div class="col-sm-2 col-sm-offset-5">
             <div class="checkbox">
                 <label>
-                    <input type="checkbox" id="dotiming" /> <abbr title="see console for info">Do timing?</abbr>          
+                    <input type="checkbox" id="dotiming" /> <abbr title="See console for info">Do timing?</abbr>          
                 </label>
             </div>
         </div>
@@ -109,9 +148,10 @@
                 <div class="form-group">
                     <label class="col-sm-2 control-label" for="canvassize">Canvas size</label>
                     <div class="col-sm-3">
-                        <select class="form-control" id="canvassize" disabled>
+                        <select class="form-control" id="canvassize">
                             <option>800x600</option>
                             <option>800x800</option>
+                            <option>640x480</option>
                             <option>400x300</option>
                             <option>200x150</option>
                         </select>
@@ -133,12 +173,23 @@
                 <div class="form-group slider-group">
                     <div class="col-sm-offset-1 col-sm-3 control-label">
                         <label for="subsetpercent">% points to render</label><br />
-                        <span id="ptsDrawn">pts</span>
+                        <span id="ptsDrawn"></span>
                     </div>
-                    <div class="col-sm-7">
+                    <div class="col-sm-4">
                         <div id="subsetpercent"></div>
                     </div>
-                    <div id="disp-subsetpercent" class="col-sm-1 slider-value">100%</div>
+                    <div id="disp-subsetpercent" class="col-sm-1 slider-value" style="margin-left: 40px;">100%</div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="col-sm-6 control-label">
+                        <label for="doperf">Execute a performance run (dumps to console)</label>
+                    </div>
+                    <div class="col-sm-6">
+                        <button class="btn btn-default" id="doperf">
+                            Do performance run
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -174,6 +225,54 @@
             <dd>Similar to <code>venn3-500.txt</code> except 125 points per group, meaning structure is even harder to see, but is still recoverable using the above tips.</dd>
         </dl>
         
+    </div>
+</div>
+
+<div id="faq" class="modal fade" tabIndex="-2" role="dialog" aria-labelledby="faqLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="faqLabel">How to Use Splatterplots JS</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    This project is a JavaScript implementation of the Splatterplot interface described by <a href="http://cs.wisc.edu/~adrm" target="_blank">Adrian Mayorga</a> and <a href="http://cs.wisc.edu/~gleicher" target="_blank">Michael Gleicher</a> in their TVCG submission entitled <a href="http://graphics.cs.wisc.edu/Papers/2013/MG13/" target="_blank"><strong>Splatterplots: Overcoming Overdraw in Scatter Plots</strong></a>. The work was also presented at IEEE VIS in the invited TVCG InfoVis session in 2013.
+                </p><p>
+                    This current implementation is architected by <a href="http://cs.wisc.edu/~sarikaya" target="_blank">Alper Sarikaya</a> to test the practicality of WebGL as a visualization medium.  The project contents are <a href="https://github.com/uwgraphics/splatterjs/" target="_blank">available for browsing and forking on GitHub</a>.
+                </p>
+                <p>&nbsp;</p>
+                
+                <h4>Loading data into Splatterplots JS</h4>
+                <p>
+                    Load a file into the Splatterplot interface by clicking the blue <button class="btn btn-primary btn-xs" data-toggle="modal" data-target="#fileloader">Load File</button> button.  A modal dialog will pop-up, asking for a filename.  Select a text file for uploading, and the dialog will automatically interpret the first couple of lines of the datafile.
+                </p><p>
+                    Fill in the parameters based on the composition of the data.  You will have the option to select the columns that represent the x- and y-axis.  By selecting a <strong>Group By column</strong>, the data will be split into data series based on the unique values in that column.
+                </p><p>
+                    Clicking on the <strong>Save Options and Load Dataset</strong> button will load the dataset into Splatterplots.  You can return to the dataset setup page to change data parsing parameters without having to re-upload your data.
+                </p><p>
+                    The <em>URL will update</em> to contain the datafile uploaded as well as parsing parameters.  You can use this URL with the hash intact to return to your view of the data.
+                </p>
+                <p>&nbsp;</p>
+                
+                <h4>Interacting with Splatterplots</h4>
+                <p>
+                    Interact with Splatterplots by dragging the canvas with the mouse button and zooming using the scroll wheel.  The visual parameters of Splatterplots can be changed by moving the sliders under the canvas; the visualization will update when the slider is released.
+                </p><p>
+                    By default, each individual data series will use the highest density value <em>visible on the canvas</em> to determine the filled, thresholded region.  The <strong>Use Global Maximum?</strong> checkbox will force all data series to use the same global maximum of the current view.  This may help to view direct comparisons, but will de-emphasize underrepresented data series.
+                </p>
+                <p>&nbsp;</p>
+                
+                <h4>Implementation Notes</h4>
+                <p>
+                    This implementation of Splatterplots has only been tested in Google Chrome (v36).  Client computers must support WebGL (GPU, drivers, browser, OS) and the <strong>OES_float_texture</strong> WebGL extension for correct rendering. Check WebGL support of your current configuration on <a href="http://renderingpipeline.com/webgl-extension-viewer/" target="_blank">RenderingPipeline</a>.  Firefox support is forthcoming.  Internet Explorer and Safari do not support WebGL due to security concerns.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <p class="pull-left small" style="margin-top: 10px;">&copy; 2014 &mdash; UW Graphics Group, University of Wisconsin-Madison</p>
+                <button class="btn btn-success" data-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -315,6 +414,7 @@
     <script type="text/javascript" src="debug.js"></script>
     <script type="text/javascript" src="fileops.js"></script>
     <script type="text/javascript" src="color.js"></script>
+    <script type="text/javascript" src="perf.js"></script>
     <script type="text/javascript" src="splatterplot.js"></script>
     <script>
     
@@ -333,6 +433,8 @@
             .format("{path}/{dataRow}/{x}/{y}/{grp}")
             .change(function(e) {
                 var data = e.data;
+                
+                $("#filename-label").html(data.path);
                 
                 // get the data and load it into the splatterplot
                 $.get(uploadFileDir + data.path, parseDataToSplatterplot(hash));
@@ -471,13 +573,13 @@
                 
                 // update the URL string, which will call the change() method 
                 // that prompts a splatterplot dataset update
-               hash.set({
+               hash.update({
                     path: currentFile.url.split(uploadFileDir)[1], // get only the filename
                     dataRow: +$("#uploadDataStartLine").val(),
                     x: +$("#uploadXColumn").val(),
                     y: +$("#uploadYColumn").val(),
                     grp: +$("#uploadGroupColumn").val()
-                }).check();
+                }).write();
                 
                 $("#fileloader").modal('hide');
             }

@@ -175,7 +175,7 @@
     }
 
     var keys = [],
-        word = "([-\\w\\.]+)",
+        word = "([-\\w\\.\\%]+)",
         wordPattern = new RegExp("{" + word + "}", "g"),
         pattern = new RegExp("^" + fmt.replace(wordPattern, function(_, key) {
           keys.push(key);

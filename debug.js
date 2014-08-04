@@ -74,6 +74,22 @@ var debug2FloatTexture = function(tex, x, y, w, h) {
   return output;
 };
 
+var debugMax = function() {
+  if (!shaders['maxdebug']) {
+    if (!timer)
+      timer = setTimeout("gl.ondraw()", 300);
+    return;
+  }
+  
+  var grp = ds.groups[0];
+  grp.textures[maxTexName].bind(0);
+  shaders['maxdebug'].uniforms({
+    maxTex: 0,
+    delta: [1.0 / gl.canvas.width, 1.0 / gl.canvas.height],
+    maxVal: 5
+  }).draw(plane);
+  grp.textures[maxTexName].unbind(0);
+};
 
 // ### debugJfa();
 //
