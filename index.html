@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Splatterplots JS - UW Graphics Group</title>
+
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
-	<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
     
     <!-- boostrap -->
     <link href="libs/bootstrap.min.css" rel="stylesheet" />
@@ -17,7 +20,6 @@
     
 </head>
 <body>
-<div class="container">
 
 <!-- navbar -->
 <nav class="navbar navbar-default" role="navigation">
@@ -50,6 +52,8 @@
         </div>
     </div>
 </nav>
+
+<div class="container-fluid">
 
 <!-- GL.create() will insert a canvas here -->
 <div class="row">
@@ -114,7 +118,7 @@
         <div class="col-sm-2">
             <div class="checkbox">
                 <label>
-                    <input type="checkbox" id="hideoutliers" /> Hide Outliers?          
+                    <input type="checkbox" id="hideoutliers" /> Hide outliers?          
                 </label>
             </div>
         </div>
@@ -123,15 +127,25 @@
         </div>
     </div>
     <div class="form-group">
-        <div class="col-sm-2 col-sm-offset-1">
+        <div class="col-sm-4 col-sm-offset-1">
             <button class="btn btn-warning" data-toggle="collapse" data-target="#debug">
                 Show Debug
             </button>
+            <button class="btn btn-warning" id="changefi">
+                Lo-fi version (640x480)
+            </button>
         </div>
-        <div class="col-sm-2 col-sm-offset-5">
+        <div class="col-sm-3">
             <div class="checkbox">
                 <label>
-                    <input type="checkbox" id="dotiming" /> <abbr title="See console for info">Do timing?</abbr>          
+                    <input type="checkbox" id="showbackground" /> Show background?
+                </label>
+            </div>
+        </div>
+        <div class="col-sm-2">
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" id="hidegrid" /> Hide grid?         
                 </label>
             </div>
         </div>
@@ -182,13 +196,27 @@
                 </div>
                 
                 <div class="form-group">
-                    <div class="col-sm-6 control-label">
+                    <div class="col-sm-5 control-label">
                         <label for="doperf">Execute a performance run (dumps to console)</label>
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-3">
                         <button class="btn btn-default" id="doperf">
                             Do performance run
                         </button>
+                    </div>
+                    <div class="col-sm-2">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" id="showpoints" /> Show points?
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-sm-2">
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" id="dotiming" /> <abbr title="See console for info">Do timing?</abbr>          
+                            </label>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -454,6 +482,22 @@
             })
             .enable()
             .check();
+            
+        // change the fidelity of Splatterplots when clicked
+        if (location.search == "?lofi") {
+            $("#changefi").html("Hi-fi version (800x600)");
+        } else {
+            $("#changefi").html("Lo-fi version (640x480)");
+        }
+        
+        $("#changefi").click(function() {
+            //window.event.returnValue = false;
+            if (window.location.search == "?lofi") {
+                setTimeout(function() { location.search = ""; }, 100);
+            } else {
+                setTimeout(function() { location.search = "?lofi"; }, 100);
+            }
+        });
     
         // given a file, try to figure out how many columns are in the file 
         // and what the column names are

@@ -21,7 +21,7 @@ canvas:nth-child(2) {
 canvas { 
 	margin: 0 auto;
 	border: 1px solid black;
-	display: block
+	display: block;
 }
 
 section { 

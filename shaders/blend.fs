@@ -176,7 +176,7 @@ void main()
 			Ldec = 1.0;
 		}
 		if(Nf <= 0.0) {
-			gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);		
+			gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);		
 		} else {
 			vec3 newLab = vec3(x/Nf, y/Nf, z/Nf);
 			vec3 newLch = LABtoLCH(newLab);
@@ -184,7 +184,7 @@ void main()
 			newLch.x = newLch.x * Ldec;
 
 			vec3 ret = LABtoRGB(LCHtoLAB(newLch), true);
-			gl_FragColor = vec4(ret.x,ret.y,ret.z,1.0);
+			gl_FragColor = vec4(ret.x,ret.y,ret.z,min(1.0, Nf));
 		}
 	}
 }

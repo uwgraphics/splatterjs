@@ -1,7 +1,12 @@
 window.onload = main;
 
 // create the gl context using lightgl.js
-var gl = GL.create({width: 800, height: 600});
+var gl;
+if (location.search == "?lofi") {
+  gl = GL.create({width: 640, height: 480});
+} else {
+  gl = GL.create({width: 800, height: 600});
+}
 
 // hold compiled shaders
 var shaders = [];
@@ -46,6 +51,10 @@ var maxComputed = false;
 // `maxTexture` and `maxTexture2` holds the global maximum texture
 var maxTexture = [];
 var maxTextureNum = -1;
+
+// holds any sort of background texture, and the corresponding plane
+var bgTexture;
+var bgPlane;
 
 // rendering variables (should be user-controlled eventually)
 var sigma = 15.0;
@@ -122,6 +131,14 @@ var initTextures = function() {
   maxTexture[0] = new GL.Texture(gl.canvas.width, gl.canvas.height, floatOpts);
   maxTexture[1] = new GL.Texture(gl.canvas.width, gl.canvas.height, floatOpts);
   
+  // Assuming the texture is a power-of-two texture.  
+  // Set correction factor to crop off excess texture in 
+  bgTexture = GL.Texture.fromURL("img/usa-map.png", {
+    minFilter: gl.NEAREST_MIPMAP_LINEAR,
+    magFilter: gl.LINEAR,
+    format: gl.RGBA
+  });
+  
   // Initialize a utility framebuffer
   ds.fbo = gl.createFramebuffer();
   
@@ -163,6 +180,25 @@ var clearTextures = function(grp) {
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 };
 
+// ### deleteTextures();
+//
+// Forcibly deletes all textures.
+var deleteTextures = function() {
+  ds.groups.forEach(function(grp, g) {
+    for (var texture in grp.textures) {
+      gl.deleteTexture(grp.textures[texture].id);
+      delete grp.textures[texture];
+    }
+  });
+  
+  for (var i = 0; i < 2; i++) {
+    gl.deleteTexture(maxTexture[i].id);
+    delete maxTexture[i];
+  }
+  
+  textureExists = false;
+}
+
 // ### drawPoints();
 //
 // Draws the points as a conventional scatterplot.  Useful to see overdraw.
@@ -177,7 +213,7 @@ var drawPoints = function() {
   gl.clear(gl.COLOR_BUFFER_BIT);
   
   var shader = shaders['testlgl'];
-  shader.uniforms({pointSize: 4});
+  //shader.uniforms({pointSize: 4});
   
   gl.enable(gl.DEPTH_TEST);
   gl.disable(gl.BLEND);
@@ -187,11 +223,16 @@ var drawPoints = function() {
   gl.matrixMode(gl.MODELVIEW);
   setZoomPan();
   
+  var colorz = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [128, 128, 0], [128, 128, 128]];
+  
   // Draw all data series as one color
   ds.groups.forEach(function(v,i) {
     var vertBuffer = [];
     vertBuffer['position'] = v.buf;
-    shader.drawBuffers(vertBuffer, null, gl.POINTS);
+    shader.uniforms({
+      pointSize: 4,
+      color: colorz[i]
+    }).drawBuffers(vertBuffer, null, gl.POINTS);
   });
   
   // Remove the transformation
@@ -493,11 +534,32 @@ var shade = function() {
   });
 };
 
+// # setTransformationBackground();
+//
+// Sets the transformation matrix used by the background drawing shader.  
+// For now, assumes the background is a equirectangular projection of the US
+// centered at xx, xx, bounds 
+var setTransformationBackground = function(mb) {
+  // From Wikipedia: https://commons.wikimedia.org/wiki/File:USA_location_map.svg;
+  // the bounds of the current map; N, S, W, E:
+  
+  // create the `bgPlane` if it hasn't been created
+  if (!bgPlane) {
+    bgPlane = GL.Mesh.plane();
+    bgPlane.vertices[0] = [mb[0], mb[2], 0];
+    bgPlane.vertices[1] = [mb[1], mb[2], 0];
+    bgPlane.vertices[2] = [mb[0], mb[3], 0];
+    bgPlane.vertices[3] = [mb[1], mb[3], 0];
+    
+    bgPlane.compile();
+  }
+};
+
 // ### blend();
 //
 // Blend the shaded datasets together into the final image, and draw to the viewport.
 var blend = function() {
-  if (!shaders['blend']) {
+  if (!shaders['blend'] || !shaders['background']) {
     if (!timer)
       timer = setTimeout('gl.ondraw()', 300);
     return;
@@ -505,15 +567,39 @@ var blend = function() {
   
   gl.clearColor(1.0, 1.0, 1.0, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  gl.disable(gl.BLEND);
   
-  // should bind other datasets here
-  /*
-  `for (var i = 0; i < ds.groups.length; i++) {
-    ds.groups[i].textures['rgb'].bind(i);
-  }`*/
-  //ds.groups[0].textures['rgb'].bind(0);
-  //ds.groups[1].textures['rgb'].bind(1);
+  gl.enable(gl.BLEND);
+  gl.blendEquation(gl.FUNC_ADD);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  
+  if (bgTexture && $("#showbackground").prop("checked")) {
+    var mapBounds = [-125.5, -66.5, 24.2, 49.8];
+    setTransformationBackground(mapBounds);
+    
+    // Set up point-drawing state and transformation matrix.
+    gl.pushMatrix();
+    gl.matrixMode(gl.MODELVIEW);
+    setZoomPan();
+    
+    bgTexture.bind(0);
+    
+    // Set where the crop the image to allow a power-of-two texture size (for mipmapping);
+    // takes original scale height (2133px) and 'scales' the texture coordinates so they crop off 
+    // the remainder to make the power-of-two size (4096 - 2133).
+    mapBounds[2] = mapBounds[2] - ((mapBounds[3] - mapBounds[2]) / 2133) * (4096 - 2133);//23.55968;
+  
+    // draw background, if it exists
+    shaders['background'].uniforms({
+      background: 0,
+      bounds: mapBounds
+    }).draw(bgPlane);
+    
+    bgTexture.unbind(0);
+    
+    // Clean up state
+    gl.bindBuffer(gl.ARRAY_BUFFER, null); // release buffer
+    gl.popMatrix();
+  }
   
   ds.groups.forEach(function(grp, i) {
     grp.textures['rgb'].bind(i);
@@ -726,9 +812,13 @@ gl.ondraw = function() {
   }
   
   // draw the plot elements (axes, labels)
-  timeStart("draw 2D grid");
-  draw2d();
-  timeStop("draw 2D grid");
+  if ($("#hidegrid").prop('checked')) {
+    context2d.clearRect(0, 0, gl.canvas.width, gl.canvas.height);
+  } else {
+    timeStart("draw 2D grid");
+    draw2d();
+    timeStop("draw 2D grid");
+  }
   
   console.timeEnd("== total time elapsed");
   //timeStop("== total time elapsed");
@@ -951,35 +1041,46 @@ var takeSubset = function(percent) {
 // new bounds of the data, and the textures need to be re-created.
 var resetUIForNewData = function() {
   setInitBounds();
-  textureExists = false;
+
+  // Delete the textures if they already exist.
+  if (textureExists) 
+    deleteTextures();
+
+    textureExists = false;
   maxComputed = false;
 }
 
 var resizeCanvas = function(width, height) {
-  // only change if width or height are different
-  if (gl.canvas.width != width || gl.canvas.height != height) {
+  // only change if width or height are different (or defined)
+  if (width && height && (gl.canvas.width != width || gl.canvas.height != height)) {
     gl.canvas.width = width;
     gl.canvas.height = height;
-    gl.canvas.style.width = width + "px";
-    gl.canvas.style.height = height + "px";
+    //gl.canvas.style.width = width + "px";
+    //gl.canvas.style.height = height + "px";
     
     var canvas2d = document.getElementById("2dcanvas");
     canvas2d.width = width;
     canvas2d.height = height;
-    
-    canvas2d.style.top = "-" + ((+height) + 7) + "px";
-    
-    // force a rebuild (compute new bounds, force rebuild of textures)
-    resetUIForNewData();
   }
   
   // Set up WebGL environment.
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  //gl.matrixMode(gl.PROJECTION);
-  //gl.ortho(0, gl.canvas.width, 0, gl.canvas.height, -100, 100);
-  //gl.matrixMode(gl.MODELVIEW);
+  gl.matrixMode(gl.PROJECTION);
+  gl.loadIdentity();
+  gl.ortho(0, gl.canvas.width, 0, gl.canvas.height, -100, 100);
+  gl.matrixMode(gl.MODELVIEW);
   
-  return width * height;
+  // Always center the 2d grid over the WebGL canvas, dynamically (based on gl.canvas.height).
+  document.getElementById("2dcanvas").style.top = "-" + (gl.canvas.height + 2) + "px";
+  document.getElementById("splatters").style.height = (gl.canvas.height + 7) + "px";
+  
+  // force a rebuild (compute new bounds, force rebuild of textures)
+  if (width && height && (gl.canvas.width != width || gl.canvas.height != height)) {
+    resetUIForNewData();
+  }
+  
+  if (width && height)
+    return width * height;
 };
 
 // ### main();
@@ -1002,12 +1103,8 @@ function main() {
   document.getElementById("splatters").appendChild(canvas2d);
   context2d = canvas2d.getContext("2d");
   
-  // Set up WebGL environment.
-  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  gl.matrixMode(gl.PROJECTION);
-  gl.ortho(0, gl.canvas.width, 0, gl.canvas.height, -100, 100);
-  gl.matrixMode(gl.MODELVIEW);
-  
+  resizeCanvas(); 
+
   // See if oes_texture_float is available (adds support for float textures), and enable
   // c.f. <https://groups.google.com/forum/#!msg/webgl-dev-list/oa_hC83oe-U/fkYbScsvA3cJ>
   var f = gl.getExtension("OES_texture_float");
@@ -1056,6 +1153,8 @@ function main() {
   $("#showmax").change(gl.ondraw);
   $("#dotiming").change(gl.ondraw);
   $("#globalmax").change(gl.ondraw);
+  $("#showbackground").change(gl.ondraw);
+  $("#hidegrid").change(gl.ondraw);
   
   // Load the required shader files.
   loadShaderFromFiles('testlgl');
@@ -1075,6 +1174,8 @@ function main() {
   loadShaderFromFiles('jfainit', 'testblur.vs', 'jfainit.fs');
   loadShaderFromFiles('jfa', 'testblur.vs', 'jfa.fs');
   loadShaderFromFiles('shade', 'testblur.vs', 'shade.fs');
+  
+  loadShaderFromFiles('background');
   loadShaderFromFiles('blend', 'testblur.vs', 'blend.fs');
   
   // debug
