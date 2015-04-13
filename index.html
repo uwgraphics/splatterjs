@@ -111,7 +111,7 @@
         <div class="col-sm-3">
             <div class="checkbox">
                 <label>
-                    <input type="checkbox" id="globalmax" /> <abbr title="Use the maximum value from all datasets when determining thresholded region; otherwise, use per-group max.">Use global maximum?</abbr>
+                    <input type="checkbox" id="globalmax" checked /> <abbr title="Use the maximum value from all datasets when determining thresholded region; otherwise, use per-group max.">Use global maximum?</abbr>
                 </label>
             </div>
         </div>
@@ -210,6 +210,10 @@
                                 <input type="checkbox" id="showpoints" /> Show points?
                             </label>
                         </div>
+                        
+                        <button class="btn btn-default" id="shufflepts">
+                            Shuffle groups
+                        </button>
                     </div>
                     <div class="col-sm-2">
                         <div class="checkbox">
@@ -297,7 +301,7 @@
                 </p>
             </div>
             <div class="modal-footer">
-                <p class="pull-left small" style="margin-top: 10px;">&copy; 2014 &mdash; UW Graphics Group, University of Wisconsin-Madison</p>
+                <p class="pull-left small" style="margin-top: 10px;"><a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/InteractiveResource" property="dct:title" rel="dct:type">MMSD and its Geography</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://cs.wisc.edu/~sarikaya/classes/j676/data.html" property="cc:attributionName" rel="cc:attributionURL">Alper Sarikaya</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.<br />Based on a work at <a xmlns:dct="http://purl.org/dc/terms/" href="http://cs.wisc.edu/~sarikaya/classes/j676/data.html" rel="dct:source">http://cs.wisc.edu/~sarikaya/classes/j676/data.html</a>./p>
                 <button class="btn btn-success" data-dismiss="modal">Close</button>
             </div>
         </div>

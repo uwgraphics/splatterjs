@@ -20,6 +20,7 @@ var loadFile = function(text, dataStart, xCol, yCol, grpCol) {
   // Leave the old data to the garbage collector, and create new groups
   // (see <http://stackoverflow.com/questions/1232040/> for discussion).
   ds.groups = [];
+  ds.groupNames = [];
   
   ds.groupCol = grpCol;
   var delimiter = ",";
@@ -43,7 +44,15 @@ var loadFile = function(text, dataStart, xCol, yCol, grpCol) {
   for (var i = dataStart; i < ds.numRows; i++) {
     // If group-by was not selected (-1), force everything into the first group.
     // Otherwise, slice data by the group-by column.
-    var thisGroup = grpCol == -1 ? 0 : lines[i][ds.groupCol];
+    var thisGroup = 0;
+    if (grpCol != -1) {
+      thisGroupName = lines[i][ds.groupCol]
+      if (ds.groupNames.indexOf(thisGroupName) == -1)
+        ds.groupNames.push(thisGroupName);
+        
+      thisGroup = ds.groupNames.indexOf(thisGroupName);
+    }
+    
     if (!ds.groups[thisGroup]) {
       ds.groups[thisGroup] = {};
       ds.groups[thisGroup].data = [];

@@ -202,7 +202,8 @@ var deleteTextures = function() {
 // ### drawPoints();
 //
 // Draws the points as a conventional scatterplot.  Useful to see overdraw.
-var drawPoints = function() {
+var order = [];
+var drawPoints = function(doShuffle) {
   if (!shaders['testlgl']) {
     if (!timer)
       timer = setTimeout("gl.ondraw()", 300);
@@ -225,15 +226,30 @@ var drawPoints = function() {
   
   var colorz = [[255, 0, 0], [0, 255, 0], [0, 0, 255], [128, 128, 0], [128, 128, 128]];
   
-  // Draw all data series as one color
-  ds.groups.forEach(function(v,i) {
+  if (order.length == 0) {
+    for (var i = 0; i < ds.groups.length; i++) order[i] = i;
+  } 
+   
+  if (doShuffle) {
+    // use Fisher-Yates to shuffle
+    for (var i = order.length - 1; i > 1; i--) {
+      var j = Math.floor(Math.random() * (i+1));
+      var tmp = order[i];
+      order[i] = order[j];
+      order[j] = tmp;
+    }
+  }
+  
+  // Draw each data series as one color
+  for (var i = 0; i < order.length; i++) {
+    var v = ds.groups[order[i]];
     var vertBuffer = [];
     vertBuffer['position'] = v.buf;
     shader.uniforms({
-      pointSize: 4,
-      color: colorz[i]
+      pointSize: outlierSize,
+      color: colorz[order[i]]
     }).drawBuffers(vertBuffer, null, gl.POINTS);
-  });
+  }
   
   // Remove the transformation
   gl.popMatrix();
@@ -1146,6 +1162,11 @@ function main() {
     gl.ondraw();
   });
   
+  $("#shufflepts").click(function() {
+    drawPoints(true);
+    $("#showpoints").prop('checked', true)
+  });
+  
   // On any option change, trigger an WebGL redraw.
   $("#showpoints").change(gl.ondraw);
   $("#showjfa").change(gl.ondraw);
@@ -1289,7 +1310,11 @@ function main() {
     }, 
     change: function(ev, ui) {
       var ptsDrawn = takeSubset(ui.value);
+      
+      // force rebuild of the maximum value textures
+      maxComputed = false;
       gl.ondraw();
+      
       $("#disp-subsetpercent").html(ui.value + "%");
       $("#ptsDrawn").html("points drawn: " + ptsDrawn);
     }
