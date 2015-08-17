@@ -30,6 +30,14 @@ SplatterJs uses a multitude of libraries to help it go.  Below is a list of the 
 * [**Hashable.js**](https://github.com/shawnbot/hashable) (none?) -- Adds support for parsing/updating the URL hash to save current viewing state
 * [**lightgl.js**](https://github.com/evanw/lightgl.js/) (MIT?) -- Provides a nice abstraction layer for doing low-level WebGL commands (e.g. drawing to texture, managing shaders, binding textures)
 
+### Demo
+
+An assorted collection of example datasets loaded into SplatterJs.  Please be aware that the URI may change in the future as SplatterJs finds a more permanent home.
+
+* [Two Gaussians](http://graphics.cs.wisc.edu/Projects/SplatterJs/?#venn2.txt/2/0/1/2) -- The same dataset as is shown in the teaser figure above
+* [Five Gaussians](http://graphics.cs.wisc.edu/Projects/SplatterJs/?#venn5-250k.txt/2/0/1/2) -- Showing five Gaussian distributions comprising 250,000 2D points (50k per group)
+* [FARS 2012 data](http://graphics.cs.wisc.edu/Projects/SplatterJs/?#fars-2012.csv/2/1/0/-1) -- Showing the FARS ([Fatality Analysis Reporting System](http://www.nhtsa.gov/FARS)) data for the 2011 year.  By clicking on the 'hide grid' and 'show background' checkboxes, a map of the United State is displayed
+
 
 ### Contact
 
