@@ -98,6 +98,17 @@ var loadFile = function(text, dataStart, xCol, yCol, grpCol) {
   // get colors for all the groups
   ds.colors = getColorsNew(74, numGroups);
   
+  // construct the legend for all found groups
+  $("#legend-items").html("");
+  ds.groupNames.forEach(function(grpName, i) {
+    var color = ds.colors[i];
+    var cssColor = color.map(function(c) { return Math.round(c * 255); }).join(",");
+    $("#legend-items").append('\
+                    <li>\
+                        <div class="legend-swatch" style="background-color: rgb(' + cssColor + ');"></div> ' + grpName + '\
+                    </li>');
+  });
+  
   // Set flag to allow rendering to continue.
   dataReady = true;
 };

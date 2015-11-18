@@ -57,9 +57,21 @@
 
 <!-- GL.create() will insert a canvas here -->
 <div class="row">
-    <div class="col-sm-12">
+    <div class="col-sm-12" id="splattercell">
         <div id="splatters">
 
+        </div>
+        <div id="legend" class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">Legend</h3>
+            </div>
+            <div class="panel-body">
+                <ul id="legend-items" class="list-inline">
+                    <li>
+                        Loading dataset...
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
@@ -269,9 +281,9 @@
             </div>
             <div class="modal-body">
                 <p>
-                    This project is a JavaScript implementation of the Splatterplot interface described by <a href="http://cs.wisc.edu/~adrm" target="_blank">Adrian Mayorga</a> and <a href="http://cs.wisc.edu/~gleicher" target="_blank">Michael Gleicher</a> in their TVCG submission entitled <a href="http://graphics.cs.wisc.edu/Papers/2013/MG13/" target="_blank"><strong>Splatterplots: Overcoming Overdraw in Scatter Plots</strong></a>. The work was also presented at IEEE VIS in the invited TVCG InfoVis session in 2013.
+                    This project is a JavaScript implementation of the Splatterplot interface described by <a href="http://cs.wisc.edu/~adrm" target="_blank">Adrian Mayorga</a> and <a href="http://cs.wisc.edu/~gleicher" target="_blank">Michael Gleicher</a> in their TVCG submission entitled <a href="http://graphics.cs.wisc.edu/Papers/2013/MG13/" target="_blank"><strong>Splatterplots: Overcoming Overdraw in Scatter Plots</strong></a>.
                 </p><p>
-                    This current implementation is architected by <a href="http://cs.wisc.edu/~sarikaya" target="_blank">Alper Sarikaya</a> to test the practicality of WebGL as a visualization medium.  The project contents are <a href="https://github.com/uwgraphics/splatterjs/" target="_blank">available for browsing and forking on GitHub</a>.
+                    This current implementation is architected by <a href="http://cs.wisc.edu/~sarikaya" target="_blank">Alper Sarikaya</a> to test the practicality of WebGL as a visualization medium.  A short paper on this (continuing) effort was presented at the <a href="http://www.interactive-analysis.org/papers/2015/sarikaya.pdf" target="_blank">Data Systems for Interactive Analysis workshop</a> at IEEE VIS 2015.  The project contents are <a href="https://github.com/uwgraphics/splatterjs/" target="_blank">available for browsing and forking on GitHub</a>.
                 </p>
                 <p>&nbsp;</p>
                 
@@ -301,7 +313,7 @@
                 </p>
             </div>
             <div class="modal-footer">
-                <p class="pull-left small" style="margin-top: 10px;"><a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/InteractiveResource" property="dct:title" rel="dct:type">MMSD and its Geography</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://cs.wisc.edu/~sarikaya/classes/j676/data.html" property="cc:attributionName" rel="cc:attributionURL">Alper Sarikaya</a> is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.<br />Based on a work at <a xmlns:dct="http://purl.org/dc/terms/" href="http://cs.wisc.edu/~sarikaya/classes/j676/data.html" rel="dct:source">http://cs.wisc.edu/~sarikaya/classes/j676/data.html</a>./p>
+                <p class="pull-left small" style="text-align: left;"><a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" /></a><br /><span xmlns:dct="http://purl.org/dc/terms/" href="http://purl.org/dc/dcmitype/InteractiveResource" property="dct:title" rel="dct:type">SplatterJs</span> by <a xmlns:cc="http://creativecommons.org/ns#" href="http://cs.wisc.edu/~sarikaya" property="cc:attributionName" rel="cc:attributionURL">Alper Sarikaya</a> is licensed under a <br /><a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.<br />Based on a work at <a xmlns:dct="http://purl.org/dc/terms/" href="http://www.interactive-analysis.org/papers/2015/sarikaya.pdf" rel="dct:source">http://www.interactive-analysis.org/papers/2015/sarikaya.pdf</a>.</p>
                 <button class="btn btn-success" data-dismiss="modal">Close</button>
             </div>
         </div>

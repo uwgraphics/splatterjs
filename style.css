@@ -7,8 +7,38 @@ html, body {
 	margin: -12px 7px 0 0;
 }
 
+#splattercell {
+	text-align: center;
+	position: relative;
+}
+
 #splatters {
 	height: 607px;
+	display: inline-block;
+}
+
+#legend { 
+	background-color: #fff;
+	border: 1px solid black;
+	display: inline-block;
+	width: 150px;
+	position: absolute;
+	bottom: -10px;
+	margin-left: 10px;
+	text-align: left;
+}
+
+#legend li { 
+	display: block;
+	margin-bottom: 7px;
+}
+
+.legend-swatch {
+	display: inline-block;
+	width: 15px;
+	height: 15px;
+	margin-right: 7px;
+	border: none;
 }
 
 /* dunno why #2dcanvas doesn't work */
