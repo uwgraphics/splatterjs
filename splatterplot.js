@@ -1202,6 +1202,8 @@ function main() {
   // debug
   loadShaderFromFiles('jfadebug', 'testblur.vs', 'jfadebug.fs');
   loadShaderFromFiles('maxdebug', 'testblur.vs', 'debugmax.fs');
+  loadShaderFromFiles('densitydebug', 'testblur.vs', 'densitytest.fs');
+  loadShaderFromFiles('outlierdebug', 'testblur.vs', 'debugoutliers.fs');
   
   // debug outliers
   loadShaderFromFiles('outliers', 'outliers.vs', 'testpt.fs');

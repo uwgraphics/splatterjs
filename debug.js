@@ -109,10 +109,79 @@ var debugJfa = function() {
   grp.textures['dist0'].bind(0);
   shaders['jfadebug'].uniforms({
     texture: 0,
-    maxDist: 500
+    maxDist: 700
   }).draw(plane);
   
   grp.textures['dist0'].unbind(0);
+};
+
+var debugDensity = function() {
+  if (!shaders['densitydebug']) {
+	if (!timer)
+	  timer = setTimeout("gl.ondraw()", 300);
+	return;
+  }
+
+  gl.disable(gl.DEPTH_TEST);
+  gl.enable(gl.BLEND);
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  //gl.clearColor(0.87451, 0.90196, 0.81569, 1.0);
+  gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+
+  // only do the first group
+  for (var i = 0; i < 5; i++) 
+	ds.groups[i].textures['freq0'].bind(i);
+
+  getMaxTexture(ds.groups[0]).bind(5);
+  shaders['densitydebug'].uniforms({
+	texture1: 0,
+	texture2: 1,
+	texture3: 2,
+	texture4: 3,
+	texture5: 4,
+	maxTex: 5
+  }).draw(plane);
+  
+  for (var i = 0; i < 5; i++) 
+	ds.groups[i].textures['freq0'].unbind(i);
+
+  getMaxTexture(ds.groups[0]).unbind(5);
+};
+
+
+var debugOutliers = function() {
+  if (!shaders['outlierdebug']) {
+	if (!timer)
+	  timer = setTimeout("gl.ondraw()", 300)
+	return;
+  }
+
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
+  //gl.clearColor(0.87451, 0.90196, 0.81569, 1.0);
+  gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
+  
+  // gather all the textures and bind them
+  for (var i = 0; i < 5; i++) {
+	ds.groups[i].textures['outlierpts'].bind(i);
+  }
+
+  shaders['outlierdebug'].uniforms({
+	texture1: 0,
+	texture2: 1,
+	texture3: 2,
+	texture4: 3,
+	texture5: 4,
+	rgb1: ds.colors[0],
+	rgb2: ds.colors[1],
+	rgb3: ds.colors[2],
+	rgb4: ds.colors[3],
+	rgb5: ds.colors[4]
+  }).draw(plane);
+
+  for (var i = 0; i < 5; i++) {
+	ds.groups[i].textures['outlierpts'].unbind(i);
+  }
+  
 };
 
 var threeChanToFloat = function(r,g,b) {
