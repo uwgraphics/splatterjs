@@ -28,6 +28,9 @@ var offset = [0,0];
 var dataReady = false;
 var bounds = [];
 
+// holds a KD-tree for user querying ('what is here?')
+var pointTree = {};
+
 // the dataset object that represents all data series
 var ds = { 
   data: [],

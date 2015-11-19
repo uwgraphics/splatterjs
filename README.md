@@ -35,6 +35,7 @@ SplatterJs uses a multitude of libraries to help it go.  Below is a list of the 
 * [**jQuery-File-Upload**](https://github.com/blueimp/jQuery-File-Upload) (MIT) -- Adds ajax-y support for uploading data files
 * [**Hashable.js**](https://github.com/shawnbot/hashable) (none?) -- Adds support for parsing/updating the URL hash to save current viewing state
 * [**lightgl.js**](https://github.com/evanw/lightgl.js/) (MIT?) -- Provides a nice abstraction layer for doing low-level WebGL commands (e.g. drawing to texture, managing shaders, binding textures)
+* [**kd-tree-javascript**](https://github.com/ubilabs/kd-tree-javascript) (MIT) -- Provides an implementation of k-d trees to answer the question "what points are here?"
 
 ### Contact
 

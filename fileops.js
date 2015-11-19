@@ -109,6 +109,29 @@ var loadFile = function(text, dataStart, xCol, yCol, grpCol) {
                     </li>');
   });
   
+  // start constructing the kd-tree to support user queries ("what is here?")
+  console.time("constructing kd-tree");
+  var points = ds.groups.map(function(grp, i) {
+    return grp.data.map(function(d) { 
+      return {
+        'x': +d[0],
+        'y': +d[1],
+        'grp': ds.groupNames[i]
+      };
+    });
+  }).reduce(function(a, b) {
+    return a.concat(b);
+  }, []);
+        
+  var euclidDist = function(a,b) {
+    var dx = a.x - b.x;
+    var dy = a.y - b.y;
+    return dx * dx - dy * dy;
+  };
+  
+  pointTree = new kdTree(points, euclidDist, ['x', 'y']);
+  console.timeEnd("constructing kd-tree");
+  
   // Set flag to allow rendering to continue.
   dataReady = true;
 };
