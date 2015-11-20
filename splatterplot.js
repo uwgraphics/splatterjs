@@ -853,6 +853,7 @@ gl.onmousedown = function(e) {
   panY = gl.canvas.height - e.y;
 };
 
+var lastPt = {'x': Number.MAX_VALUE, 'y': Number.MIN_VALUE};
 gl.onmousemove = function(e) {
   if (drags(e)) {
     screenOffset[0] += e.x - panX;
@@ -861,6 +862,45 @@ gl.onmousemove = function(e) {
     panX = e.x;
     panY = gl.canvas.height - e.y;
     gl.ondraw();
+  } else {
+    // get actual mouse position within the canvas
+    var mouseX = e.x - gl.canvas.offsetLeft;
+    var mouseY = gl.canvas.height - (e.y - gl.canvas.offsetParent.offsetTop);
+  
+    // just do the simple thing and ask which grid cell we're in
+    var minPt = [untransformX(0), untransformY(0)];
+    var maxPt = [untransformX(gl.canvas.width), untransformY(gl.canvas.height)];
+    var gridSize = [gl.canvas.width / clutterRadius, gl.canvas.height / clutterRadius];
+    
+    // get the grid size in actual coords
+    for (var i = 0; i < 2; i++) {
+      gridSize[i] = (maxPt[i] - minPt[i]) / gridSize[i];
+    }  
+    
+    var resolution = [gl.canvas.width, gl.canvas.height];
+    
+    var gridOffset = [0,0];
+    for (var i = 0; i < 2; i++) {
+      gridOffset[i] = (minPt[i] / gridSize[i]) - Math.floor(minPt[i] / gridSize[i]);
+      gridOffset[i] = gridOffset[i] * clutterRadius / resolution[i];
+    }
+    
+    var curPos = [untransformX(mouseX), untransformY(mouseY)];
+    var curCell = [];
+    for (var i = 0; i < 2; i++) {
+      curCell[i] = Math.floor((curPos[i] + gridOffset[i] - minPt[i]) / gridSize[i]);
+    }
+    
+    // console.log("---");
+    // console.log("pixel space: %3d, %3d, point space: %4.3f, %4.3f", mouseX, mouseY, curPos[0], curPos[1]);
+    // console.log("in gridcell %2d, %2d!", curCell[0], curCell[1]);
+    
+    // get closest point
+    var nearestPt = pointTree.nearest({'x': curPos[0], 'y': curPos[1]}, 1)[0];
+    if (!(lastPt.x == nearestPt[0].x && lastPt.y == nearestPt[0].y)) {    
+      console.log("%s (%4.3f, %4.3f), distance %4.3f", nearestPt[0].grp, nearestPt[0].x, nearestPt[0].y, nearestPt[1]);
+      lastPt = nearestPt[0];
+    }
   }
 };
 

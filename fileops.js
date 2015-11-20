@@ -126,7 +126,7 @@ var loadFile = function(text, dataStart, xCol, yCol, grpCol) {
   var euclidDist = function(a,b) {
     var dx = a.x - b.x;
     var dy = a.y - b.y;
-    return dx * dx - dy * dy;
+    return dx * dx + dy * dy;
   };
   
   pointTree = new kdTree(points, euclidDist, ['x', 'y']);
