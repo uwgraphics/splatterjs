@@ -51,6 +51,8 @@ var loadFile = function(text, dataStart, xCol, yCol, grpCol) {
         ds.groupNames.push(thisGroupName);
         
       thisGroup = ds.groupNames.indexOf(thisGroupName);
+    } else {
+      ds.groupNames = ["unnamed"];
     }
     
     if (!ds.groups[thisGroup]) {
