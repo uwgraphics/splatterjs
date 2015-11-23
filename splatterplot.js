@@ -853,7 +853,6 @@ gl.onmousedown = function(e) {
   panY = gl.canvas.height - e.y;
 };
 
-var lastPt = {'x': Number.MAX_VALUE, 'y': Number.MIN_VALUE};
 gl.onmousemove = function(e) {
   if (drags(e)) {
     screenOffset[0] += e.x - panX;
@@ -862,7 +861,7 @@ gl.onmousemove = function(e) {
     panX = e.x;
     panY = gl.canvas.height - e.y;
     gl.ondraw();
-  } else {
+  } else if (pointTree.hasOwnProperty("nearest")) {
     // get actual mouse position within the canvas
     var mouseX = e.x - gl.canvas.offsetLeft;
     var mouseY = gl.canvas.height - (e.y - gl.canvas.offsetParent.offsetTop);
@@ -897,10 +896,15 @@ gl.onmousemove = function(e) {
     
     // get closest point
     var nearestPt = pointTree.nearest({'x': curPos[0], 'y': curPos[1]}, 1)[0];
-    if (!(lastPt.x == nearestPt[0].x && lastPt.y == nearestPt[0].y)) {    
-      console.log("%s (%4.3f, %4.3f), distance %4.3f", nearestPt[0].grp, nearestPt[0].x, nearestPt[0].y, nearestPt[1]);
-      lastPt = nearestPt[0];
-    }
+    
+    var grpColor = ds.colors[ds.groupNames.indexOf(nearestPt[0].grp)];
+    var cssColor = grpColor.map(function(c) { return Math.round(c * 255); }).join(",");
+    
+    var detailStr = '<div class="legend-swatch" style="background-color: ';
+    detailStr += 'rgb(' + cssColor + ');"></div> ';
+    detailStr += '<strong>' + nearestPt[0].grp + "</strong><br />";
+    detailStr += "(" + nearestPt[0].x.toFixed(2) + ", " + nearestPt[0].y.toFixed(2) + ")";
+    $("#detail-text").html(detailStr);
   }
 };
 

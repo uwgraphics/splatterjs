@@ -25,7 +25,7 @@ var loadFile = function(text, dataStart, xCol, yCol, grpCol) {
   ds.groupCol = grpCol;
   var delimiter = ",";
   
-  var lines = text.trim("\r").split("\n");
+  var lines = text.trim().split("\n").map(function(d) { return d.trim(); });
   for (var i = 0; i < lines.length; i++) {
     lines[i] = lines[i].split(delimiter);
   }
@@ -46,7 +46,7 @@ var loadFile = function(text, dataStart, xCol, yCol, grpCol) {
     // Otherwise, slice data by the group-by column.
     var thisGroup = 0;
     if (grpCol != -1) {
-      thisGroupName = lines[i][ds.groupCol]
+      var thisGroupName = lines[i][ds.groupCol]
       if (ds.groupNames.indexOf(thisGroupName) == -1)
         ds.groupNames.push(thisGroupName);
         
